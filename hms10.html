@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Appointments</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #34495e;
+            text-align: center;
+            padding-bottom: 0.5rem;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            background-color: #34495e;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background-color: #f0f2f5;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .add-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-button:hover {
+            background-color: #0056b3;
+        }
+
+        .appointments-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-collapse: collapse;
+        }
+
+        .appointments-table th, .appointments-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .appointments-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status-scheduled {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .status-completed {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .action-button {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        .edit-button {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .cancel-button {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1 class="sidebar-title">HMS Admin</h1>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="patients.html">Patients</a></li>
+                <li><a href="doctors.html">Doctors</a></li>
+                <li><a href="appointments.html">Appointments</a></li>
+                <li><a href="login.html">Logout</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Appointments</h1>
+                <button class="add-button" id="addAppointmentBtn">Schedule Appointment</button>
+            </div>
+            <table class="appointments-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient Name</th>
+                        <th>Doctor Name</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentsTableBody">
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        const appointmentsTableBody = document.getElementById('appointmentsTableBody');
+        const addAppointmentBtn = document.getElementById('addAppointmentBtn');
+
+        // Load appointments from localStorage
+        const loadAppointments = () => {
+            const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            appointmentsTableBody.innerHTML = '';
+            appointments.forEach((appointment, index) => {
+                appointmentsTableBody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${appointment.patientName}</td>
+                        <td>${appointment.doctorName}</td>
+                        <td>${appointment.date}</td>
+                        <td>${appointment.time}</td>
+                        <td><span class="status ${appointment.status === 'Scheduled' ? 'status-scheduled' : 'status-completed'}">${appointment.status}</span></td>
+                        <td>
+                            <button class="action-button edit-button" onclick="editAppointment(${index})">Edit</button>
+                            <button class="action-button cancel-button" onclick="deleteAppointment(${index})">Cancel</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        // Save appointments to localStorage
+        const saveAppointments = (appointments) => {
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            loadAppointments();
+        };
+
+        // Add new appointment
+        addAppointmentBtn.addEventListener('click', () => {
+            const patientName = prompt('Enter Patient Name:');
+            const doctorName = prompt('Enter Doctor Name:');
+            const date = prompt('Enter Date (YYYY-MM-DD):');
+            const time = prompt('Enter Time (e.g., 10:00 AM):');
+            const status = 'Scheduled';
+
+            if (patientName && doctorName && date && time) {
+                const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+                appointments.push({ patientName, doctorName, date, time, status });
+                saveAppointments(appointments);
+            } else {
+                alert('All fields are required!');
+            }
+        });
+
+        // Edit appointment
+        const editAppointment = (index) => {
+            const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            const appointment = appointments[index];
+            appointment.patientName = prompt('Enter Patient Name:', appointment.patientName);
+            appointment.doctorName = prompt('Enter Doctor Name:', appointment.doctorName);
+            appointment.date = prompt('Enter Date (YYYY-MM-DD):', appointment.date);
+            appointment.time = prompt('Enter Time (e.g., 10:00 AM):', appointment.time);
+            saveAppointments(appointments);
+        };
+
+        // Delete appointment
+        const deleteAppointment = (index) => {
+            const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            appointments.splice(index, 1);
+            saveAppointments(appointments);
+        };
+
+        // Initial load
+        loadAppointments();
+        // Logout Button functionality
+        document.getElementById('logoutButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent the default link behavior
+
+            // Optionally clear session or perform actions before logout
+            alert('Logging out...');
+
+            // Redirect to login page (or any other action)
+            window.location.href = 'HMS.html'; // Redirect to your login page
+        });
+    </script>
+</body>
+</html>

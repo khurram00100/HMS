@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS - Patients</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-bottom: 1px solid #34495e;
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .nav-links li {
+            margin-bottom: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .nav-links a:hover {
+            background-color: #34495e;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+
+        .add-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-button:hover {
+            background-color: #0056b3;
+        }
+
+        .patients-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .patients-table th,
+        .patients-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .patients-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .patients-table td {
+            font-size: 1rem;
+            color: #34495e;
+        }
+
+        .action-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .edit-button {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .edit-button:hover {
+            background-color: #e0a800;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1 class="sidebar-title">HMS Admin</h1>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="patients.html">Patients</a></li>
+                <li><a href="doctors.html">Doctors</a></li>
+                <li><a href="appointments.html">Appointments</a></li>
+                <li><a href="login.html">Logout</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Patients</h1>
+                <button class="add-button" id="add-patient">Add New Patient</button>
+            </div>
+            <table class="patients-table" id="patients-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be dynamically populated -->
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        const patientsTableBody = document.getElementById('patients-table').getElementsByTagName('tbody')[0];
+        let patients = JSON.parse(localStorage.getItem('patients')) || [];
+        let patientIdCounter = patients.length ? Math.max(...patients.map(p => p.id)) + 1 : 1;
+
+        function renderPatients() {
+            patientsTableBody.innerHTML = '';
+            patients.forEach(patient => {
+                const row = patientsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${patient.id}</td>
+                    <td>${patient.name}</td>
+                    <td>${patient.age}</td>
+                    <td>${patient.gender}</td>
+                    <td>${patient.phone}</td>
+                    <td>${patient.address}</td>
+                    <td>
+                        <button class="action-button edit-button" onclick="editPatient(${patient.id})">Edit</button>
+                        <button class="action-button delete-button" onclick="deletePatient(${patient.id})">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        function addPatient() {
+            const name = prompt("Enter Patient Name:");
+            const age = prompt("Enter Patient Age:");
+            const gender = prompt("Enter Patient Gender:");
+            const phone = prompt("Enter Patient Phone:");
+            const address = prompt("Enter Patient Address:");
+
+            if (name && age && gender && phone && address) {
+                const newPatient = {
+                    id: patientIdCounter++,
+                    name,
+                    age,
+                    gender,
+                    phone,
+                    address
+                };
+                patients.push(newPatient);
+                localStorage.setItem('patients', JSON.stringify(patients));
+                renderPatients();
+            } else {
+                alert("All fields are required!");
+            }
+        }
+
+        function editPatient(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                const name = prompt("Update Patient Name:", patient.name);
+                const age = prompt("Update Patient Age:", patient.age);
+                const gender = prompt("Update Patient Gender:", patient.gender);
+                const phone = prompt("Update Patient Phone:", patient.phone);
+                const address = prompt("Update Patient Address:", patient.address);
+
+                if (name && age && gender && phone && address) {
+                    patient.name = name;
+                    patient.age = age;
+                    patient.gender = gender;
+                    patient.phone = phone;
+                    patient.address = address;
+                    localStorage.setItem('patients', JSON.stringify(patients));
+                    renderPatients();
+                } else {
+                    alert("All fields are required!");
+                }
+            } else {
+                alert("Patient not found!");
+            }
+        }
+
+        function deletePatient(id) {
+            patients = patients.filter(p => p.id !== id);
+            localStorage.setItem('patients', JSON.stringify(patients));
+            renderPatients();
+        }
+
+        document.getElementById('add-patient').addEventListener('click', addPatient);
+
+        // Initial render on page load
+        renderPatients
+        // Logout Button functionality
+        document.getElementById('logoutButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent the default link behavior
+
+            // Optionally clear session or perform actions before logout
+            alert('Logging out...');
+
+            // Redirect to login page (or any other action)
+            window.location.href = 'HMS.html'; // Redirect to your login page
+        });
+    </script>
+</body>
+</html>
+
+
